@@ -34,8 +34,16 @@ public class FlumeEvent extends SimpleEvent {
     private static final String DEFAULT_EVENT_PREFIX = "";
     //private static final String EVENT_TYPE = "eventType";
     //private static final String EVENT_ID = "eventId";
+
     private static final String GUID = "guId";
-    private static final String TIMESTAMP = "timeStamp";;
+    private static final String TIMESTAMP = "timeStamp";
+    private static final String LOGGER_NAME = "loggerName";
+    private static final String LOG_LEVEL = "logLevel";
+    private static final String LOG_LEVEL_STRING = "logLevelString";
+    private static final String THREAD = "thread";
+    private static final String APPLICATION = "application";
+
+
     private final ILoggingEvent event;
     private final Map<String, String> ctx = new HashMap<String, String>();
     private final boolean compress;
@@ -89,6 +97,10 @@ public class FlumeEvent extends SimpleEvent {
         } else {
             ctx.putAll(mdc);
         }
+
+        headers.put(LOG_LEVEL, String.valueOf(event.getLevel().levelInt));
+        headers.put(LOG_LEVEL_STRING, event.getLevel().levelStr);
+        headers.put(THREAD, event.getThreadName());
 
         if (required != null) {
             final String[] array = required.split(",");
