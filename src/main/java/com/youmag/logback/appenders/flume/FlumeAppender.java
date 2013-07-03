@@ -39,10 +39,10 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
     private PatternLayout layout = null;
 	private int batchSize = 1;
 	private int reconnectDelay = 0;
-	private int retries = 0;
+	private int retries = 10;
 	private String dataDir = null;
-	private String type = "undef";
-	
+	private String type = "avro";
+
     /**
      * Create a Flume Avro Appender.
      */
@@ -61,7 +61,8 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
         				mdcRequired, mdcPrefix,
         				eventPrefix, compressBody);
         
-        String str = this.layout.doLayout(flumeEvent.getEvent());
+        //String str = this.layout.doLayout(flumeEvent.getEvent());
+        String str = flumeEvent.getEvent().getMessage();
         byte[] bytes = null;
         
         try {
@@ -78,9 +79,9 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
      */
     @Override
     public void start() {
-        if (layout == null) {
-        	throw new RuntimeException("layout is null while creating appender !");
-        }
+   //     if (layout == null) {
+   //     	throw new RuntimeException("layout is null while creating appender !");
+    //    }
         if (name == null) {
         	throw new RuntimeException("No name provided for Appender");
         }
