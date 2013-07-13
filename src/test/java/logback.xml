@@ -20,10 +20,14 @@
     </agent>
 
   </appender>
+
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FLUME" />
+    </appender>
         
 
   <root level="info">
-    <appender-ref ref="FLUME" />
+    <appender-ref ref="ASYNC" />
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

@@ -120,7 +120,13 @@ public class FlumeAvroManager extends AbstractFlumeManager {
             retries = DEFAULT_RECONNECTS;
         }
         if (client == null) {
-            client = connect(agents);
+            int attempts = 0;
+            while (client == null && attempts < retries) {
+                client = connect(agents);
+                 LOGGER.warn("Could not connect to agent, retrying in "+delay+"ms");
+                sleep(delay);
+                ++attempts;
+            }
         }
         String msg = "No Flume agents are available";
         if (client != null) {

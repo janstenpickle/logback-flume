@@ -97,7 +97,6 @@ public class TestAppender {
     @Test
     public void testLogbackAppender() throws IOException {
 
-        //configureSource();
         Logger logger = loggerContext.getLogger(TestAppender.class);
         for(int count = 0; count <= 1000; count++){
       /*
@@ -204,13 +203,14 @@ public class TestAppender {
         testSlowness();
     }
 
-
+         */
     @After
     public void cleanUp(){
+
         source.stop();
         ch.stop();
     }
-        */
+
 
     static class SlowMemoryChannel extends MemoryChannel {
         private final int slowTime;
