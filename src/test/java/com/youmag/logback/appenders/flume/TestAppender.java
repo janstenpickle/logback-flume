@@ -84,7 +84,7 @@ public class TestAppender {
         configurator = new JoranConfigurator();
         configurator.setContext(loggerContext);
 
-        configurator.doConfigure(LOGBACK_CONFIG);
+        configurator.doConfigure(LOGBACK_CONFIG_ASYNC);
         configurator.registerSafeConfiguration();
         StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
 

@@ -21,7 +21,7 @@
     </appender>
 
 
-    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+    <appender name="ASYNC" class="com.youmag.logback.appenders.async.AsyncAppender">
         <discardingThreshold>60</discardingThreshold>
         <appender-ref ref="FLUME" />
     </appender>
