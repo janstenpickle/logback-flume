@@ -42,14 +42,17 @@ public class FlumeEmbeddedManager extends AbstractFlumeManager {
 
     private final String shortName;
 
+    private final StatusLogger statusLogger;
+
 
     /**
      * Constructor
      * @param name The unique name of this manager.
      * @param node The Flume Node.
      */
-    protected FlumeEmbeddedManager(final String name, final String shortName, final FlumeNode node) {
+    protected FlumeEmbeddedManager(final String name, final String shortName, final FlumeNode node, final StatusLogger statusLogger) {
         super(name);
+        this.statusLogger = statusLogger;
         this.node = node;
         this.shortName = shortName;
         final SourceRunner runner = node.getConfiguration().getSourceRunners().get(SOURCE_NAME);
@@ -69,7 +72,7 @@ public class FlumeEmbeddedManager extends AbstractFlumeManager {
      * @return A FlumeAvroManager.
      */
     public static FlumeEmbeddedManager getManager(final String name, final List<FlumeAgent> agents,
-                                                  int batchSize, final String dataDir) {
+                                                  int batchSize, final String dataDir, StatusLogger statusLogger) {
 
         if (batchSize <= 0) {
             batchSize = 1;
@@ -94,7 +97,7 @@ public class FlumeEmbeddedManager extends AbstractFlumeManager {
             sb.append("]");
         }
         return (FlumeEmbeddedManager) getManager(sb.toString(), factory,
-            new FactoryData(name, agents, batchSize, dataDir));
+            new FactoryData(name, agents, batchSize, dataDir, statusLogger));
     }
 
     @Override
@@ -115,21 +118,23 @@ public class FlumeEmbeddedManager extends AbstractFlumeManager {
         private final int batchSize;
         private final String dataDir;
         private final String name;
+        private final StatusLogger statusLogger;
 
         /**
          * Constructor.
          * @param name The name of the Appender.
          * @param agents The agents.
-         * @param properties The Flume configuration properties.
          * @param batchSize The number of events to include in a batch.
          * @param dataDir The directory where Flume should write to.
+         * @param statusLogger
          */
         public FactoryData(final String name, final List<FlumeAgent> agents, final int batchSize,
-                           final String dataDir) {
+                           final String dataDir, StatusLogger statusLogger) {
             this.name = name;
             this.agents = agents;
             this.batchSize = batchSize;
             this.dataDir = dataDir;
+            this.statusLogger = statusLogger;
         }
     }
 
@@ -150,14 +155,14 @@ public class FlumeEmbeddedManager extends AbstractFlumeManager {
                 final DefaultLogicalNodeManager nodeManager = new DefaultLogicalNodeManager();
                 final Properties props = createProperties(data.name, data.agents, data.batchSize,
                     data.dataDir);
-                final FlumeConfigurationBuilder builder = new FlumeConfigurationBuilder();
+                final FlumeConfigurationBuilder builder = new FlumeConfigurationBuilder(data.statusLogger);
                 final NodeConfiguration conf = builder.load(data.name, props, nodeManager);
 
                 final FlumeNode node = new FlumeNode(nodeManager, nodeManager, conf);
 
                 node.start();
 
-                return new FlumeEmbeddedManager(name, data.name, node);
+                return new FlumeEmbeddedManager(name, data.name, node, data.statusLogger);
             } catch (final Exception ex) {
             	throw new LogbackException("Could not create FlumeEmbeddedManager", ex);
             }

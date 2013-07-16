@@ -21,8 +21,14 @@
     </appender>
 
 
-    <root level="info">
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>60</discardingThreshold>
         <appender-ref ref="FLUME" />
+    </appender>
+
+
+    <root level="info">
+        <appender-ref ref="ASYNC" />
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

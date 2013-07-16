@@ -42,12 +42,14 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
 	private int retries = 10;
 	private String dataDir = null;
 	private String type = "avro";
+    private StatusLogger statusLogger;
 
     /**
      * Create a Flume Avro Appender.
      */
     public FlumeAppender() {
-    	super();       
+    	super();
+        statusLogger = new StatusLogger(getStatusManager(), getDeclaredOrigin());
     }
 
 	/**
@@ -95,11 +97,11 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
         }
 
         if("avro".equals(type)) {
-            manager = FlumeAvroManager.getManager(name, agents, batchSize);
+            manager = FlumeAvroManager.getManager(name, agents, batchSize, statusLogger);
         }
 
         if("agent".equals(type)) {
-            manager = FlumeEmbeddedManager.getManager(name, agents, batchSize, dataDir);
+            manager = FlumeEmbeddedManager.getManager(name, agents, batchSize, dataDir, statusLogger);
         }
         
         if (manager == null) {

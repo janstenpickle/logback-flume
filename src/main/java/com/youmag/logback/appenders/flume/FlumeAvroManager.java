@@ -38,7 +38,6 @@ import java.util.Map;
  * Manager for FlumeAvroAppenders.
  */
 public class FlumeAvroManager extends AbstractFlumeManager {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FlumeAvroManager.class);
 
     /**
       The default reconnection delay (500 milliseconds or .5 seconds).
@@ -61,14 +60,17 @@ public class FlumeAvroManager extends AbstractFlumeManager {
 
     private Transceiver transceiver;
 
+    private StatusLogger statusLogger;
+
     /**
      * Constructor
      * @param name The unique name of this manager.
      * @param agents An array of Agents.
      * @param batchSize The number of events to include in a batch.
      */
-    protected FlumeAvroManager(final String name, final String shortName, final List<FlumeAgent> agents, final int batchSize) {
-    	super(name);
+    protected FlumeAvroManager(final String name, final String shortName, final List<FlumeAgent> agents, final int batchSize, StatusLogger statusLogger) {
+        super(name);
+        this.statusLogger = statusLogger;
     	this.agents = agents;
         this.batchSize = batchSize;
         this.client = connect(agents);
@@ -81,7 +83,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
      * @param batchSize The number of events to include in a batch.
      * @return A FlumeAvroManager.
      */
-    public static FlumeAvroManager getManager(final String name, final List<FlumeAgent> agents, int batchSize) {
+    public static FlumeAvroManager getManager(final String name, final List<FlumeAgent> agents, int batchSize, StatusLogger statusLogger) {
         if (agents == null || agents.size() == 0) {
             throw new IllegalArgumentException("At least one agent is required");
         }
@@ -100,7 +102,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
             first = false;
         }
         sb.append("]");
-        return (FlumeAvroManager) getManager(sb.toString(), factory, new FactoryData(name, agents, batchSize));
+        return (FlumeAvroManager) getManager(sb.toString(), factory, new FactoryData(name, agents, batchSize, statusLogger));
     }
 
     /**
@@ -123,7 +125,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
             int attempts = 0;
             while (client == null && attempts < retries) {
                 client = connect(agents);
-                 LOGGER.warn("Could not connect to agent, retrying in "+delay+"ms");
+                 statusLogger.addWarn("Could not connect to agent, retrying in "+delay+"ms");
                 sleep(delay);
                 ++attempts;
             }
@@ -159,7 +161,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
                     if (i == retries - 1) {
                         msg = "Error writing to " + getName() + " at " + agents.get(current).getHost() + ":" +
                             agents.get(current).getPort();
-                        LOGGER.warn(msg, ex);
+                        statusLogger.addWarn(msg, ex);
                         break;
                     }
                     sleep(delay);
@@ -181,7 +183,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
                             if (i == retries - 1) {
                                 final String warnMsg = "RPC communication failed to " + getName() + " at " +
                                     agent.getHost() + ":" + agent.getPort();
-                                LOGGER.warn(warnMsg);
+                                statusLogger.addWarn(warnMsg);
                             }
                             continue;
                         }
@@ -192,7 +194,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
                         if (i == retries - 1) {
                             final String warnMsg = "Error writing to " + getName() + " at " + agent.getHost() + ":" +
                                 agent.getPort();
-                            LOGGER.warn(warnMsg, ex);
+                            statusLogger.addWarn(warnMsg, ex);
                             break;
                         }
                         sleep(delay);
@@ -228,7 +230,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
             }
             ++i;
         }
-        LOGGER.error("Flume manager " + getName() + " was unable to connect to any agents");
+        statusLogger.addError("Flume manager " + getName() + " was unable to connect to any agents");
         return null;
     }
 
@@ -238,13 +240,13 @@ public class FlumeAvroManager extends AbstractFlumeManager {
                 transceiver = new NettyTransceiver(new InetSocketAddress(hostname, port));
             }
         } catch (final IOException ioe) {
-            LOGGER.error("Unable to create transceiver", ioe);
+            statusLogger.addError("Unable to create transceiver", ioe);
             return null;
         }
         try {
             return SpecificRequestor.getClient(AvroSourceProtocol.class, transceiver);
         } catch (final IOException ioe) {
-            LOGGER.error("Unable to create Avro client");
+            statusLogger.addError("Unable to create Avro client");
             return null;
         }
     }
@@ -255,7 +257,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
             try {
                 transceiver.close();
             } catch (final IOException ioe) {
-                LOGGER.error("Attempt to clean up Avro transceiver failed", ioe);
+                statusLogger.addError("Attempt to clean up Avro transceiver failed", ioe);
             }
         }
         client = null;
@@ -291,6 +293,7 @@ public class FlumeAvroManager extends AbstractFlumeManager {
         private final String name;
         private final List<FlumeAgent> agents;
         private final int batchSize;
+        private final StatusLogger statusLogger;
 
         /**
          * Constructor.
@@ -298,10 +301,11 @@ public class FlumeAvroManager extends AbstractFlumeManager {
          * @param agents The agents.
          * @param batchSize The number of events to include in a batch.
          */
-        public FactoryData(final String name, final List<FlumeAgent> agents, final int batchSize) {
+        public FactoryData(final String name, final List<FlumeAgent> agents, final int batchSize, final StatusLogger statusLogger) {
             this.name = name;
             this.agents = agents;
             this.batchSize = batchSize;
+            this.statusLogger = statusLogger;
         }
     }
 
@@ -319,9 +323,9 @@ public class FlumeAvroManager extends AbstractFlumeManager {
         public FlumeAvroManager createManager(final String name, final FactoryData data) {
             try {
 
-                return new FlumeAvroManager(name, data.name, data.agents, data.batchSize);
+                return new FlumeAvroManager(name, data.name, data.agents, data.batchSize, data.statusLogger);
             } catch (final Exception ex) {
-                LOGGER.error("Could not create FlumeAvroManager", ex);
+                data.statusLogger.addError("Could not create FlumeAvroManager", ex);
             }
             return null;
         }

@@ -63,11 +63,16 @@ import java.util.TreeSet;
  */
 
 public class FlumeConfigurationBuilder {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FlumeConfigurationBuilder.class);
 
     private final ChannelFactory channelFactory = new DefaultChannelFactory();
     private final SourceFactory sourceFactory = new DefaultSourceFactory();
     private final SinkFactory sinkFactory = new DefaultSinkFactory();
+
+    private StatusLogger statusLogger;
+
+    public FlumeConfigurationBuilder(StatusLogger statusLogger) {
+        this.statusLogger = statusLogger;
+    }
 
     public NodeConfiguration load(final String name, final Properties props,
                                   final NodeConfigurationAware configurationAware) {
@@ -86,10 +91,10 @@ public class FlumeConfigurationBuilder {
                     switch (error.getErrorOrWarning()) {
                         case ERROR:
                             isError = true;
-                            LOGGER.error(sb.toString());
+                            statusLogger.addError(sb.toString());
                             break;
                         case WARNING:
-                            LOGGER.warn(sb.toString());
+                            statusLogger.addError(sb.toString());
                             break;
                     }
                 }
@@ -112,19 +117,19 @@ public class FlumeConfigurationBuilder {
 
             //configurationAware.startAllComponents(conf);
         } else {
-            LOGGER.warn("No configuration found for: {}", name);
+            statusLogger.addWarn("No configuration found for: {} "+ name);
         }
         return conf;
     }
 
     private void printProps(final Properties props) {
         for (final String key : new TreeSet<String>(props.stringPropertyNames())) {
-            LOGGER.error(key + "=" + props.getProperty(key));
+            statusLogger.addError(key + "=" + props.getProperty(key));
         }
     }
 
     protected void loadChannels(final FlumeConfiguration.AgentConfiguration agentConf, final NodeConfiguration conf) {
-        LOGGER.info("Creating channels");
+        statusLogger.addInfo("Creating channels");
         final Set<String> channels = agentConf.getChannelSet();
         final Map<String, ComponentConfiguration> compMap = agentConf.getChannelConfigMap();
         for (final String chName : channels) {
@@ -145,7 +150,7 @@ public class FlumeConfigurationBuilder {
                     context.getString(BasicConfigurationConstants.CONFIG_TYPE));
                 Configurables.configure(channel, context);
                 conf.getChannels().put(ch, channel);
-                LOGGER.info("created channel " + ch);
+                statusLogger.addInfo("created channel " + ch);
             }
         }
     }

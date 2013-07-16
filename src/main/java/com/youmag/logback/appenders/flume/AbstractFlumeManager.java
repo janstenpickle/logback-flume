@@ -54,7 +54,7 @@ public abstract class AbstractFlumeManager {
             if (manager == null) {
                 manager = factory.createManager(name, data);
                 if (manager == null) {
-                    throw new IllegalStateException("Unable to create a manager");
+                    //throw new IllegalStateException("Unable to create a manager");
                 }
                 MAP.put(name, manager);
             }

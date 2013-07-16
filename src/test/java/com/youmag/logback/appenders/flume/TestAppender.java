@@ -18,10 +18,10 @@
  */
 package com.youmag.logback.appenders.flume;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import junit.framework.Assert;
 import org.apache.flume.*;
@@ -37,7 +37,6 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +48,11 @@ public class TestAppender {
     private AvroSource source;
     private Channel ch;
     private Properties props;
+    private File LOGBACK_CONFIG;
+    private File LOGBACK_CONFIG_CONSOLE;
+    private File LOGBACK_CONFIG_ASYNC;
+
+    JoranConfigurator configurator;
 
     private LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
@@ -66,22 +70,36 @@ public class TestAppender {
 
         configureSource();
 
-        File TESTFILE = new File(
+
+        LOGBACK_CONFIG = new File(
                 TestAppender.class.getClassLoader()
                         .getResource("flume-logbacktest.xml").getFile());
+        LOGBACK_CONFIG_ASYNC = new File(
+                TestAppender.class.getClassLoader()
+                        .getResource("flume-logbacktest-async.xml").getFile());
+        LOGBACK_CONFIG_CONSOLE = new File(
+                TestAppender.class.getClassLoader()
+                        .getResource("flume-logbacktest-consoleonly.xml").getFile());
 
-
-        JoranConfigurator configurator = new JoranConfigurator();
+        configurator = new JoranConfigurator();
         configurator.setContext(loggerContext);
 
-        configurator.doConfigure(TESTFILE);
-
+        configurator.doConfigure(LOGBACK_CONFIG);
+        configurator.registerSafeConfiguration();
         StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
+
+
+
+
+
 
     }
 
 
     private void configureSource() {
+        Logger logger = loggerContext.getLogger(TestAppender.class);
+
+        //logger.info("Configuring ");
         List<Channel> channels = new ArrayList<Channel>();
         channels.add(ch);
 
@@ -95,7 +113,7 @@ public class TestAppender {
         source.start();
     }
     @Test
-    public void testLogbackAppender() throws IOException {
+    public void testLogbackAppender() throws IOException, JoranException {
 
         Logger logger = loggerContext.getLogger(TestAppender.class);
         for(int count = 0; count <= 1000; count++){
@@ -125,13 +143,14 @@ public class TestAppender {
             transaction.close();
         }
 
+
     }
-  /*
+    /*
   @Test
-  public testLogbackAppenderFailureUnsafeMode() throws Throwable {
-    configureSource();
-    props.setProperty("log4j.appender.out2.UnsafeMode", String.valueOf(true));
-    Logger logger = loggerContext.getLogger(TestLogbackAppender.class);
+  public void testLogbackAppenderFailureUnsafeMode() throws Throwable {
+
+      Logger logger = loggerContext.getLogger(TestAppender.class);
+
     source.stop();
     sendAndAssertFail(logger);
 
@@ -145,11 +164,8 @@ public class TestAppender {
         sendAndAssertFail(logger);
 
     }
-            */
-    private void doLog(Logger logger, Level level, String msg){
-        logger.log(null, TestAppender.class.getCanonicalName(), level.levelInt, msg, null, null);
+             */
 
-    }
 
     private void sendAndAssertFail(Logger logger) throws Throwable {
       /*
@@ -157,13 +173,12 @@ public class TestAppender {
        * create levels directly using count, the level will be set as the
        * default.
        */
-        int level = 20000;
         try {
             //    doLog(logger, Level.toLevel(level), "Test Msg");
             logger.info("Test Msg");
         } catch (FlumeException ex) {
             ex.printStackTrace();
-            throw ex.getCause();
+            //throw ex.getCause();
         }
         Transaction transaction = ch.getTransaction();
         transaction.begin();
@@ -175,20 +190,17 @@ public class TestAppender {
     }
 
 
-
      /*
+
     @Test(expected = EventDeliveryException.class)
     public void testSlowness() throws Throwable {
         ch = new SlowMemoryChannel(2000);
         Configurables.configure(ch, new Context());
         configureSource();
-        props.put("log4j.appender.out2.Timeout", "1000");
-        props.put("log4j.appender.out2.layout", "org.apache.log4j.PatternLayout");
-        props.put("log4j.appender.out2.layout.ConversionPattern",
-                "%-5p [%t]: %m%n");
+
+        configurator.doConfigure(LOGBACK_CONFIG);
         Logger logger = loggerContext.getLogger(TestAppender.class);
         Thread.currentThread().setName("Log4jAppenderTest");
-        int level = 10000;
         String msg = "This is log message number" + String.valueOf(1);
         try {
             logger.info(msg);
@@ -201,12 +213,15 @@ public class TestAppender {
     public void testSlownessUnsafeMode() throws Throwable {
         props.setProperty("log4j.appender.out2.UnsafeMode", String.valueOf(true));
         testSlowness();
-    }
+    }  */
 
-         */
+
     @After
-    public void cleanUp(){
+    public void cleanUp() throws JoranException {
+        //Deconfigure flume appender
+        Logger logger = loggerContext.getLogger(TestAppender.class);
 
+        //logger.info("Deconfiguring");
         source.stop();
         ch.stop();
     }
