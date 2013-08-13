@@ -47,8 +47,6 @@ import org.apache.flume.sink.DefaultSinkFactory;
 import org.apache.flume.sink.DefaultSinkProcessor;
 import org.apache.flume.sink.SinkGroup;
 import org.apache.flume.source.DefaultSourceFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class to help with accessing System Properties.
@@ -152,7 +151,7 @@ public class PropertiesUtil {
         try {
             return new Properties(System.getProperties());
         } catch (final SecurityException ex) {
-            LoggerFactory.getLogger(PropertiesUtil.class).error("Unable to access system properties.");
+        //    LoggerFactory.getLogger(PropertiesUtil.class).error("Unable to access system properties.");
             // Sandboxed - can't read System Properties
             return new Properties();
         }

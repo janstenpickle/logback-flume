@@ -29,7 +29,7 @@ public abstract class AbstractFlumeManager {
     /**
      * Number of Appenders using this manager.
      */
-    private int count = 0;
+    public int count = 0;
     private final String name;
 
     protected AbstractFlumeManager(final String name) {

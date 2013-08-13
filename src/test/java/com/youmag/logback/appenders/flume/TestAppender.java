@@ -70,7 +70,6 @@ public class TestAppender {
 
         configureSource();
 
-
         LOGBACK_CONFIG = new File(
                 TestAppender.class.getClassLoader()
                         .getResource("flume-logbacktest.xml").getFile());
@@ -97,7 +96,6 @@ public class TestAppender {
 
 
     private void configureSource() {
-        Logger logger = loggerContext.getLogger(TestAppender.class);
 
         //logger.info("Configuring ");
         List<Channel> channels = new ArrayList<Channel>();
