@@ -42,6 +42,8 @@ public class FlumeEvent extends SimpleEvent {
     private static final String LOG_LEVEL_STRING = "logLevelString";
     private static final String THREAD = "thread";
     private static final String APPLICATION = "application";
+    private static final String HOSTNAME = "hostname";
+
 
 
     private final ILoggingEvent event;
@@ -59,7 +61,7 @@ public class FlumeEvent extends SimpleEvent {
      * @param compress If true the event body should be compressed.
      */
     public FlumeEvent(final ILoggingEvent event, final String includes, final String excludes, final String required,
-                      String mdcPrefix, String eventPrefix, final boolean compress) {
+                      String mdcPrefix, String eventPrefix, final boolean compress, String appName, String hostname) {
     	this.event = event;
     	this.compress = compress;
         final Map<String, String> headers = getHeaders();
@@ -101,6 +103,13 @@ public class FlumeEvent extends SimpleEvent {
         headers.put(LOG_LEVEL, String.valueOf(event.getLevel().levelInt));
         headers.put(LOG_LEVEL_STRING, event.getLevel().levelStr);
         headers.put(THREAD, event.getThreadName());
+        headers.put(LOGGER_NAME, event.getLoggerName());
+        if (appName != null) {
+            headers.put(APPLICATION, appName);
+        }
+        if (hostname != null) {
+            headers.put(HOSTNAME, hostname);
+        }
 
         if (required != null) {
             final String[] array = required.split(",");

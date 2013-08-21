@@ -35,6 +35,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,7 +113,7 @@ public class TestAppender {
     }
     @Test
     public void testLogbackAppender() throws IOException, JoranException {
-
+        MDC.put("test", "hello");
         Logger logger = loggerContext.getLogger(TestAppender.class);
         for(int count = 0; count <= 1000; count++){
       /*
@@ -134,6 +135,8 @@ public class TestAppender {
             Assert.assertEquals(new String(event.getBody(), "UTF8"), msg);
 
             Map<String, String> hdrs = event.getHeaders();
+
+            System.out.println(hdrs);
 
            // logger.info("Received from channel: "+new String(event.getBody()));
 

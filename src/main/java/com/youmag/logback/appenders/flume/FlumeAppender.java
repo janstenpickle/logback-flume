@@ -17,6 +17,7 @@
 package com.youmag.logback.appenders.flume;
 
 import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import ch.qos.logback.classic.PatternLayout;
@@ -43,6 +44,7 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
 	private String dataDir = null;
 	private String type = "avro";
     private StatusLogger statusLogger;
+    private String appName = null;
 
     /**
      * Create a Flume Avro Appender.
@@ -57,11 +59,16 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
      * @param event The ILoggingEvent.
      */
     public void append(final ILoggingEvent event) {
-
+        String hostname = null;
+        try {
+             hostname = java.net.InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            statusLogger.addWarn("Could not look up local hostname");
+        }
         final FlumeEvent flumeEvent = 
         		new FlumeEvent(event, mdcIncludes, mdcExcludes, 
         				mdcRequired, mdcPrefix,
-        				eventPrefix, compressBody);
+        				eventPrefix, compressBody, appName, hostname);
         
         //String str = this.layout.doLayout(flumeEvent.getEvent());
         String str = flumeEvent.getEvent().getMessage();
@@ -177,5 +184,9 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
 	public void setType(String type) {
 		this.type = type;
 	}
+
+    public void setAppName(String appName){
+        this.appName = appName;
+    }
 
 }
