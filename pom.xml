@@ -23,6 +23,7 @@ limitations under the License.
     <artifactId>logback-flume</artifactId>
     <name>Flume NG Logback Appender</name>
     <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <properties>
         <!-- Set default encoding to UTF-8 to remove maven complaints -->
@@ -237,9 +238,6 @@ limitations under the License.
             <artifactId>logback-classic</artifactId>
             <version>1.0.9</version>
             <scope>compile</scope>
-
-
-
         </dependency>
 
         <dependency>
@@ -315,6 +313,19 @@ limitations under the License.
         </dependency>
 
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>deployment</id>
+            <name>Internal Releases</name>
+            <url>${repo.releases}</url>
+        </repository>
+        <snapshotRepository>
+            <id>deployment</id>
+            <name>Internal Releases</name>
+            <url>${repo.snapshots}</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 
 </project>
