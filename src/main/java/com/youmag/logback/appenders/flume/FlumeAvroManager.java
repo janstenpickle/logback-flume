@@ -44,8 +44,6 @@ public class FlumeAvroManager extends AbstractFlumeManager {
 
     private static final int DEFAULT_RECONNECTS = 3;
 
-    private static AvroManagerFactory factory = new AvroManagerFactory();
-
     private AvroSourceProtocol client;
 
     private final List<FlumeAgent> agents;
@@ -74,34 +72,6 @@ public class FlumeAvroManager extends AbstractFlumeManager {
         this.client = connect(agents);
     }
 
-    /**
-     * Returns a FlumeAvroManager.
-     * @param name The name of the manager.
-     * @param agents The agents to use.
-     * @param batchSize The number of events to include in a batch.
-     * @return A FlumeAvroManager.
-     */
-    public static FlumeAvroManager getManager(final String name, final List<FlumeAgent> agents, int batchSize, StatusLogger statusLogger) {
-        if (agents == null || agents.size() == 0) {
-            throw new IllegalArgumentException("At least one agent is required");
-        }
-
-        if (batchSize <= 0) {
-            batchSize = 1;
-        }
-
-        final StringBuilder sb = new StringBuilder("FlumeAvro[");
-        boolean first = true;
-        for (final FlumeAgent agent : agents) {
-            if (!first) {
-                sb.append(",");
-            }
-            sb.append(agent.getHost()).append(":").append(agent.getPort());
-            first = false;
-        }
-        sb.append("]");
-        return (FlumeAvroManager) getManager(sb.toString(), factory, new FactoryData(name, agents, batchSize, statusLogger));
-    }
 
     /**
      * Returns the index of the current agent.
@@ -284,48 +254,5 @@ public class FlumeAvroManager extends AbstractFlumeManager {
         }
     }
 
-    /**
-     * Factory data.
-     */
-    private static class FactoryData {
-        private final String name;
-        private final List<FlumeAgent> agents;
-        private final int batchSize;
-        private final StatusLogger statusLogger;
 
-        /**
-         * Constructor.
-         * @param name The name of the Appender.
-         * @param agents The agents.
-         * @param batchSize The number of events to include in a batch.
-         */
-        public FactoryData(final String name, final List<FlumeAgent> agents, final int batchSize, final StatusLogger statusLogger) {
-            this.name = name;
-            this.agents = agents;
-            this.batchSize = batchSize;
-            this.statusLogger = statusLogger;
-        }
-    }
-
-    /**
-     * Avro Manager Factory.
-     */
-    private static class AvroManagerFactory implements ManagerFactory<FlumeAvroManager, FactoryData> {
-
-        /**
-         * Create the FlumeAvroManager.
-         * @param name The name of the entity to manage.
-         * @param data The data required to create the entity.
-         * @return The FlumeAvroManager.
-         */
-        public FlumeAvroManager createManager(final String name, final FactoryData data) {
-            try {
-
-                return new FlumeAvroManager(name, data.name, data.agents, data.batchSize, data.statusLogger);
-            } catch (final Exception ex) {
-                data.statusLogger.addError("Could not create FlumeAvroManager", ex);
-            }
-            return null;
-        }
-    }
 }

@@ -103,13 +103,8 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
         	agents.add(defaultAgent);
         }
 
-        if("avro".equals(type)) {
-            manager = FlumeAvroManager.getManager(name, agents, batchSize, statusLogger);
-        }
+        manager = new FlumeAvroManager(name, name, agents, batchSize, statusLogger);
 
-        if("agent".equals(type)) {
-            manager = FlumeEmbeddedManager.getManager(name, agents, batchSize, dataDir, statusLogger);
-        }
         
         if (manager == null) {
         	throw new RuntimeException("Could not build Flume manager, check your type");

@@ -36,34 +36,6 @@ public abstract class AbstractFlumeManager {
         this.name = name;
     }
 
-    /**
-     * Retrieves a Manager if it has been previously created or creates a new Manager.
-     * @param name The name of the Manager to retrieve.
-     * @param factory The Factory to use to create the Manager.
-     * @param data An Object that should be passed to the factory when creating the Manager.
-     * @param <M> The Type of the Manager to be created.
-     * @param <T> The type of the Factory data.
-     * @return A Manager with the specified name and type.
-     */
-    public static <M extends AbstractFlumeManager, T> M getManager(final String name, final ManagerFactory<M, T> factory,
-                                                              final T data) {
-        LOCK.lock();
-        try {
-            @SuppressWarnings("unchecked")
-			M manager = (M) MAP.get(name);
-            if (manager == null) {
-                manager = factory.createManager(name, data);
-                if (manager == null) {
-                    //throw new IllegalStateException("Unable to create a manager");
-                }
-                MAP.put(name, manager);
-            }
-            manager.count++;
-            return manager;
-        } finally {
-            LOCK.unlock();
-        }
-    }
 
     
     
