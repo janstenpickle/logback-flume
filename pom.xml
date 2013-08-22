@@ -22,7 +22,7 @@ limitations under the License.
     <groupId>com.youmag.logback.appenders.flume</groupId>
     <artifactId>logback-flume</artifactId>
     <name>Flume NG Logback Appender</name>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -237,14 +237,14 @@ limitations under the License.
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.0.9</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>1.0.9</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
 
         </dependency>
 
@@ -282,27 +282,6 @@ limitations under the License.
 
         </dependency>
 
-        <!--dependency>
-            <artifactId>commons-logging</artifactId>
-            <groupId>commons-logging</groupId>
-            <version>1.0.3</version>
-            <scope>provided</scope>
-        </dependency>
-
-
-        <dependency>
-            <artifactId>log4j</artifactId>
-            <groupId>log4j</groupId>
-            <version>1.2.16</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <artifactId>slf4j-log4j12</artifactId>
-            <groupId>org.slf4j</groupId>
-            <version>1.6.1</version>
-            <scope>provided</scope>
-        </dependency-->
 
 
         <dependency>
@@ -313,6 +292,10 @@ limitations under the License.
         </dependency>
 
     </dependencies>
+
+    <profiles>
+    </profiles>
+
 
     <distributionManagement>
         <repository>

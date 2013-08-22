@@ -11,6 +11,8 @@
             <excludes>
                 <exclude>ch.qos.logback:*:*:*</exclude>
                 <exclude>org.slf4j:*:*:*</exclude>
+                <exclude>hsqldb:*:*:*</exclude>
+                <exclude>org.mortbay.jetty:*.*.*</exclude>
                 <exclude>commons-logging:commons-logging</exclude>
             </excludes>
             <outputDirectory>/</outputDirectory>
