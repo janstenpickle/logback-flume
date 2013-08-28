@@ -22,7 +22,7 @@ limitations under the License.
     <groupId>com.youmag.logback.appenders.flume</groupId>
     <artifactId>logback-flume</artifactId>
     <name>Flume NG Logback Appender</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -282,13 +282,61 @@ limitations under the License.
 
         </dependency>
 
+        <dependency>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+            <version>1.0.3</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <artifactId>jetty</artifactId>
+            <groupId>org.mortbay.jetty</groupId>
+            <version>6.1.26</version>
+            <scope>provided</scope>
+        </dependency>
 
 
         <dependency>
-            <artifactId>hadoop-core</artifactId>
-            <groupId>org.apache.hadoop</groupId>
-            <version>1.0.3</version>
-            <scope>compile</scope>
+            <artifactId>jetty-util</artifactId>
+            <groupId>org.mortbay.jetty</groupId>
+            <version>6.1.26</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <artifactId>servlet-api</artifactId>
+            <groupId>org.mortbay.jetty</groupId>
+            <version>2.5-20110124</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+            <version>1.2.16</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <artifactId>derby</artifactId>
+            <groupId>org.apache.derby</groupId>
+            <version>10.8.2.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.slf4j</groupId>
+            <version>1.6.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <artifactId>slf4j-api</artifactId>
+            <groupId>org.slf4j</groupId>
+            <version>1.6.1</version>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>
