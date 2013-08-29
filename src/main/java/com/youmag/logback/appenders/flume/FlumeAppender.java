@@ -19,10 +19,13 @@ package com.youmag.logback.appenders.flume;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.spi.AppenderAttachableImpl;
 
 /**
  * An Appender that uses the Avro protocol to route events to Flume.
@@ -45,6 +48,20 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
 	private String type = "avro";
     private StatusLogger statusLogger;
     private String appName = null;
+    private boolean includeCallerData = false;
+    public static final int DEFAULT_QUEUE_SIZE = 256;
+    private int queueSize = DEFAULT_QUEUE_SIZE;
+
+    static final int UNDEFINED = -1;
+    private int discardingThreshold = UNDEFINED;
+
+    private String hostname = null;
+
+
+    BlockingQueue<ILoggingEvent> blockingQueue;
+
+    Worker worker = new Worker();
+
 
     /**
      * Create a Flume Avro Appender.
@@ -59,28 +76,20 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
      * @param event The ILoggingEvent.
      */
     public void append(final ILoggingEvent event) {
-        String hostname = null;
-        try {
-             hostname = java.net.InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            statusLogger.addWarn("Could not look up local hostname");
+
+        if (isQueueBelowDiscardingThreshold()) {
+            return;
         }
-        final FlumeEvent flumeEvent = 
-        		new FlumeEvent(event, mdcIncludes, mdcExcludes, 
-        				mdcRequired, mdcPrefix,
-        				eventPrefix, compressBody, appName, hostname);
-        
-        //String str = this.layout.doLayout(flumeEvent.getEvent());
-        String str = flumeEvent.getEvent().getMessage();
-        byte[] bytes = null;
-        
+        preprocess(event);
+        put(event);
+    }
+
+
+    private void put(ILoggingEvent event) {
         try {
-        	bytes = str.getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}        
-		flumeEvent.setBody(bytes);
-        manager.send(flumeEvent, reconnectDelay, retries);
+            blockingQueue.put(event);
+        } catch (InterruptedException e) {
+        }
     }
 
     /**
@@ -91,28 +100,33 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
    //     if (layout == null) {
    //     	throw new RuntimeException("layout is null while creating appender !");
     //    }
+
+        if (queueSize < 1) {
+            statusLogger.addError("Invalid queue size [" + queueSize + "]");
+            return;
+        }
+        blockingQueue = new ArrayBlockingQueue<ILoggingEvent>(queueSize);
+
         if (name == null) {
         	throw new RuntimeException("No name provided for Appender");
         }
 
-        AbstractFlumeManager manager = null;
-
-        if (agents == null || agents.size() == 0) {
-        	addWarn("No agents provided, using defaults");
-        	FlumeAgent defaultAgent = new FlumeAgent("localhost", 4141);
-        	agents.add(defaultAgent);
+        try {
+            hostname = java.net.InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            statusLogger.addWarn("Could not look up local hostname");
         }
 
-        manager = new FlumeAvroManager(name, name, agents, batchSize, statusLogger);
 
-        
-        if (manager == null) {
-        	throw new RuntimeException("Could not build Flume manager, check your type");
-        }
-    	addWarn("Using manager " + type);
+        if (discardingThreshold == UNDEFINED)
+            discardingThreshold = queueSize / 5;
+        statusLogger.addInfo("Setting discardingThreshold to " + discardingThreshold);
 
-        this.manager = manager;
+        worker.setDaemon(true);
+        worker.setName("FlumeAppender-Worker-" + worker.getName());
+
         super.start();
+        worker.start();
     }
 
     /**
@@ -121,10 +135,70 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
     @Override
     public void stop() {
         super.stop();
-        manager.release();
+        if (!isStarted())
+            return;
+
+        // mark this appender as stopped so that Worker can also stop if it is invoking aii.appendLoopOnAppenders
+        // and sub-appenders consume the interruption
+        super.stop();
+
+        // interrupt the worker thread so that it can terminate. Note that the interruption can be consumed
+        // by sub-appenders
+        worker.interrupt();
+        try {
+            worker.join(1000);
+        } catch (InterruptedException e) {
+            addError("Failed to join worker thread", e);
+        }
     }
 
-	public void addAgent(FlumeAgent agent) {
+    protected void preprocess(ILoggingEvent eventObject) {
+        eventObject.prepareForDeferredProcessing();
+        if(includeCallerData)
+            eventObject.getCallerData();
+    }
+
+    private boolean isQueueBelowDiscardingThreshold() {
+        return (blockingQueue.remainingCapacity() < discardingThreshold);
+    }
+
+    public boolean isIncludeCallerData() {
+        return includeCallerData;
+    }
+
+    public void setIncludeCallerData(boolean includeCallerData) {
+        this.includeCallerData = includeCallerData;
+    }
+
+
+    public int getQueueSize() {
+        return queueSize;
+    }
+
+    public void setQueueSize(int queueSize) {
+        this.queueSize = queueSize;
+    }
+
+    public int getDiscardingThreshold() {
+        return discardingThreshold;
+    }
+
+    public void setDiscardingThreshold(int discardingThreshold) {
+        this.discardingThreshold = discardingThreshold;
+    }
+
+    public int getNumberOfElementsInQueue() {
+        return blockingQueue.size();
+    }
+
+
+    public int getRemainingCapacity() {
+        return blockingQueue.remainingCapacity();
+    }
+
+
+
+    public void addAgent(FlumeAgent agent) {
 		this.agents.add(agent);
 	}
 
@@ -184,4 +258,72 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
         this.appName = appName;
     }
 
+
+
+    class Worker extends Thread {
+
+        private AbstractFlumeManager manager = null;
+
+
+        public void run() {
+            FlumeAppender parent = FlumeAppender.this;
+
+            AbstractFlumeManager manager = null;
+
+            if (parent.agents == null || parent.agents.size() == 0) {
+                addWarn("No agents provided, using defaults");
+                FlumeAgent defaultAgent = new FlumeAgent("localhost", 4141);
+                parent.agents.add(defaultAgent);
+            }
+
+            manager = new FlumeAvroManager(parent.name, parent.name, parent.agents, parent.batchSize,
+                    parent.statusLogger);
+
+
+            if (manager == null) {
+                throw new RuntimeException("Could not build Flume manager, check your type");
+            }
+            addWarn("Using manager " + type);
+
+
+            this.manager = manager;
+
+            // loop while the parent is started
+            while (parent.isStarted()) {
+                try {
+                    ILoggingEvent e = parent.blockingQueue.take();
+                    this.append(e);
+                } catch (InterruptedException ie) {
+                    break;
+                }
+            }
+
+            addInfo("Worker thread will flush remaining events before exiting. ");
+            for (ILoggingEvent e : parent.blockingQueue) {
+                this.append(e);
+            }
+
+        }
+
+        private void append(final ILoggingEvent event) {
+            FlumeAppender parent = FlumeAppender.this;
+
+            final FlumeEvent flumeEvent =
+                    new FlumeEvent(event, parent.mdcIncludes, parent.mdcExcludes,
+                            parent.mdcRequired, parent.mdcPrefix,
+                            parent.eventPrefix, parent.compressBody, parent.appName, parent.hostname);
+
+            //String str = this.layout.doLayout(flumeEvent.getEvent());
+            String str = flumeEvent.getEvent().getMessage();
+            byte[] bytes = null;
+
+            try {
+                bytes = str.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            flumeEvent.setBody(bytes);
+            this.manager.send(flumeEvent, parent.reconnectDelay, parent.retries);
+        }
+    }
 }

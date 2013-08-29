@@ -58,7 +58,7 @@ public class TestAppender {
     private LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
     @Before
-    public void initiate() throws Exception{
+    public void initiate() throws Exception {
         int port = 4141;
         source = new AvroSource();
         ch = new MemoryChannel();
@@ -74,23 +74,13 @@ public class TestAppender {
         LOGBACK_CONFIG = new File(
                 TestAppender.class.getClassLoader()
                         .getResource("flume-logbacktest.xml").getFile());
-        LOGBACK_CONFIG_ASYNC = new File(
-                TestAppender.class.getClassLoader()
-                        .getResource("flume-logbacktest-async.xml").getFile());
-        LOGBACK_CONFIG_CONSOLE = new File(
-                TestAppender.class.getClassLoader()
-                        .getResource("flume-logbacktest-consoleonly.xml").getFile());
 
         configurator = new JoranConfigurator();
         configurator.setContext(loggerContext);
 
-        configurator.doConfigure(LOGBACK_CONFIG_ASYNC);
+        configurator.doConfigure(LOGBACK_CONFIG);
         configurator.registerSafeConfiguration();
         StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
-
-
-
-
 
 
     }
@@ -111,11 +101,27 @@ public class TestAppender {
 
         source.start();
     }
+
     @Test
     public void testLogbackAppender() throws IOException, JoranException {
         MDC.put("test", "hello");
         Logger logger = loggerContext.getLogger(TestAppender.class);
-        for(int count = 0; count <= 1000; count++){
+
+        //Clear all events out of channel before starting the real test
+        //This is because the logging events from creating the channel inside this test
+        Transaction trans = ch.getTransaction();
+        trans.begin();
+        while (true) {
+            Event e = ch.take();
+            if (e == null) {
+                trans.commit();
+                trans.close();
+                break;
+            }
+        }
+
+
+        for (int count = 0; count <= 1000; count++) {
       /*
        * Log4j internally defines levels as multiples of 10000. So if we
        * create levels directly using count, the level will be set as the
@@ -132,13 +138,14 @@ public class TestAppender {
             transaction.begin();
             Event event = ch.take();
             Assert.assertNotNull(event);
+
             Assert.assertEquals(new String(event.getBody(), "UTF8"), msg);
 
             Map<String, String> hdrs = event.getHeaders();
 
             System.out.println(hdrs);
 
-           // logger.info("Received from channel: "+new String(event.getBody()));
+            // logger.info("Received from channel: "+new String(event.getBody()));
 
             transaction.commit();
             transaction.close();

@@ -22,7 +22,7 @@ limitations under the License.
     <groupId>com.youmag.logback.appenders.flume</groupId>
     <artifactId>logback-flume</artifactId>
     <name>Flume NG Logback Appender</name>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
