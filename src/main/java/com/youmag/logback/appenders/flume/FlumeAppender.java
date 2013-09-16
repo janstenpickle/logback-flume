@@ -76,7 +76,6 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
      * @param event The ILoggingEvent.
      */
     public void append(final ILoggingEvent event) {
-
         if (isQueueBelowDiscardingThreshold()) {
             return;
         }
@@ -89,6 +88,7 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
         try {
             blockingQueue.put(event);
         } catch (InterruptedException e) {
+            statusLogger.addError("Could not add event to queue", e);
         }
     }
 
@@ -293,6 +293,13 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
                 try {
                     ILoggingEvent e = parent.blockingQueue.take();
                     this.append(e);
+                } catch (RuntimeException re) {
+                    statusLogger.addError("Could not append to flume", re);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        statusLogger.addWarn("couldnt sleep worker thread");
+                    }
                 } catch (InterruptedException ie) {
                     break;
                 }
