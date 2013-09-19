@@ -22,7 +22,7 @@ limitations under the License.
     <groupId>com.youmag.logback.appenders.flume</groupId>
     <artifactId>logback-flume</artifactId>
     <name>Flume NG Logback Appender</name>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -41,7 +41,6 @@ limitations under the License.
         <stagingDirectory>${project.basedir}/target/docs</stagingDirectory>
 
         <avro.version>1.7.3</avro.version>
-        <elasticsearch.version>0.90.1</elasticsearch.version>
 
         <flume.version>1.3.1</flume.version>
     </properties>
