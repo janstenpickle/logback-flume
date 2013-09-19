@@ -16,6 +16,7 @@
  */
 package com.youmag.logback.appenders.flume;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -25,7 +26,9 @@ import java.util.concurrent.BlockingQueue;
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
+import ch.qos.logback.core.status.ErrorStatus;
 
 /**
  * An Appender that uses the Avro protocol to route events to Flume.
@@ -97,9 +100,6 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
      */
     @Override
     public void start() {
-   //     if (layout == null) {
-   //     	throw new RuntimeException("layout is null while creating appender !");
-    //    }
 
         if (queueSize < 1) {
             statusLogger.addError("Invalid queue size [" + queueSize + "]");
@@ -259,8 +259,7 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
     }
 
 
-
-    class Worker extends Thread {
+	class Worker extends Thread {
 
         private AbstractFlumeManager manager = null;
 
@@ -320,8 +319,8 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
                             parent.mdcRequired, parent.mdcPrefix,
                             parent.eventPrefix, parent.compressBody, parent.appName, parent.hostname);
 
-            //String str = this.layout.doLayout(flumeEvent.getEvent());
-            String str = flumeEvent.getEvent().getMessage();
+
+            String str = flumeEvent.getEvent().getFormattedMessage();
             byte[] bytes = null;
 
             try {

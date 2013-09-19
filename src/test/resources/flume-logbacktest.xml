@@ -2,13 +2,7 @@
 
     <appender name="FLUME" class="com.youmag.logback.appenders.flume.FlumeAppender">
         <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
-        <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy -->
-        <!--for further documentation -->
 
-        <encoder>
-
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
         <appName>chris</appName>
 
     </appender>

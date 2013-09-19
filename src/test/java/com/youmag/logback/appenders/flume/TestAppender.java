@@ -132,7 +132,7 @@ public class TestAppender {
 
             // doLog(logger, Level.toLevel(level), msg);
 
-            logger.info(msg);
+            logger.info("This is log message number{}",String.valueOf(count));
 
             Transaction transaction = ch.getTransaction();
             transaction.begin();
