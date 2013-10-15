@@ -20,12 +20,18 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.pattern.ThrowableProxyConverter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.ThrowableProxy;
 import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.spi.AppenderAttachableImpl;
 import ch.qos.logback.core.status.ErrorStatus;
@@ -262,9 +268,9 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
 	class Worker extends Thread {
 
         private AbstractFlumeManager manager = null;
+		private List<String> stackOptionList = Arrays.asList("full");
 
-
-        public void run() {
+		public void run() {
             FlumeAppender parent = FlumeAppender.this;
 
             AbstractFlumeManager manager = null;
@@ -321,10 +327,23 @@ public final class FlumeAppender extends AppenderBase<ILoggingEvent> {
 
 
             String str = flumeEvent.getEvent().getFormattedMessage();
+			StringBuffer sbuf = new StringBuffer();
+
+			sbuf.append(str);
+
+			IThrowableProxy throwableProxy = flumeEvent.getEvent().getThrowableProxy();
+			if (throwableProxy != null) {
+				sbuf.append(CoreConstants.LINE_SEPARATOR);
+				ThrowableProxyConverter converter = new ThrowableProxyConverter();
+				converter.setOptionList(stackOptionList);
+				converter.start();
+				sbuf.append(converter.convert(event));
+				sbuf.append(CoreConstants.LINE_SEPARATOR);
+			}
             byte[] bytes = null;
 
             try {
-                bytes = str.getBytes("UTF-8");
+                bytes = sbuf.toString().getBytes("UTF-8");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
