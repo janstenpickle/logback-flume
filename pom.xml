@@ -131,94 +131,116 @@ limitations under the License.
 
             </plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.3.2</version>
-                    <configuration>
-                        <source>${sourceJavaVersion}</source>
-                        <target>${targetJavaVersion}</target>
-                    </configuration>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>${sourceJavaVersion}</source>
+                    <target>${targetJavaVersion}</target>
+                </configuration>
 
-                </plugin>
+            </plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.12.3</version>
-                    <configuration>
-                        <forkMode>always</forkMode>
-                        <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>
-                        <includes>
-                            <include>${test.include.pattern}</include>
-                        </includes>
-                        <excludes>
-                            <exclude>**/*$*</exclude>
-                            <exclude>${test.exclude.pattern}</exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12.3</version>
+                <configuration>
+                    <forkMode>always</forkMode>
+                    <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>
+                    <includes>
+                        <include>${test.include.pattern}</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/*$*</exclude>
+                        <exclude>${test.exclude.pattern}</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/site/apidocs</outputDirectory>
+                    <!-- switch on dependency-driven aggregation -->
+                    <includeDependencySources>true</includeDependencySources>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.9</version>
-                    <configuration>
-                        <outputDirectory>${project.build.directory}/site/apidocs</outputDirectory>
-                        <!-- switch on dependency-driven aggregation -->
-                        <includeDependencySources>true</includeDependencySources>
+                    <dependencySourceIncludes>
+                        <!-- include ONLY flume multi-module dependencies -->
+                        <dependencySourceInclude>org.apache.flume:*</dependencySourceInclude>
+                    </dependencySourceIncludes>
+                </configuration>
+            </plugin>
 
-                        <dependencySourceIncludes>
-                            <!-- include ONLY flume multi-module dependencies -->
-                            <dependencySourceInclude>org.apache.flume:*</dependencySourceInclude>
-                        </dependencySourceIncludes>
-                    </configuration>
-                </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+            </plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.4</version>
-                </plugin>
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>${avro.version}</version>
+            </plugin>
 
-                <plugin>
-                    <groupId>org.apache.avro</groupId>
-                    <artifactId>avro-maven-plugin</artifactId>
-                    <version>${avro.version}</version>
-                </plugin>
+            <plugin>
+                <groupId>com.thoughtworks.paranamer</groupId>
+                <artifactId>paranamer-maven-plugin</artifactId>
+                <version>2.3</version>
+            </plugin>
 
-                <plugin>
-                    <groupId>com.thoughtworks.paranamer</groupId>
-                    <artifactId>paranamer-maven-plugin</artifactId>
-                    <version>2.3</version>
-                </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <siteDirectory>${project.basedir}/flume-ng-doc</siteDirectory>
+                </configuration>
+            </plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>3.1</version>
-                    <configuration>
-                        <siteDirectory>${project.basedir}/flume-ng-doc</siteDirectory>
-                    </configuration>
-                </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>docs</directory>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
 
-                <plugin>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>2.4.1</version>
-                    <configuration>
-                        <filesets>
-                            <fileset>
-                                <directory>docs</directory>
-                                <includes>
-                                    <include>**</include>
-                                </includes>
-                            </fileset>
-                        </filesets>
-                    </configuration>
-                </plugin>
-            </plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${env.CIRCLE_ARTIFACTS}">
+                                <fileset dir="${project.build.directory}">
+                                    <include name="*.jar"/>
+                                </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
 
     </build>
 
@@ -264,7 +286,7 @@ limitations under the License.
             <groupId>org.apache.flume</groupId>
             <artifactId>flume-ng-node</artifactId>
             <version>${flume.version}</version>
-          </dependency>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.flume</groupId>
